@@ -1,0 +1,56 @@
+openapi: 3.0.0
+info:
+  title: Image Processing API
+  description: An RPC API for processing user images
+  version: 1.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/NOLEPOWELL/Image_Processor/1.0.0
+  - url: http://localhost:3000
+paths:
+  /processImage:
+    post:
+      summary: Process an image with specified commands
+      description: |
+        Process an image using a set of specified commands such as resizing, rotating, flipping, and generating thumbnails.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                commands:
+                  type: array
+                  description: List of image processing commands
+                  items:
+                    type: string
+                  example: ["resizeWidth 300", "rotateLeft 90", "generateThumbnail"]
+                imageData:
+                  type: string
+                  format: binary
+                  description: Base64-encoded image data
+                  example: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
+      responses:
+        '200':
+          description: Image processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message
+                    example: Image processing completed successfully.
+                  thumbnailPaths:
+                    type: array
+                    description: List of paths to generated thumbnails
+                    items:
+                      type: string
+                      example: /images/thumbnail_123.jpg
+        '400':
+          description: Bad request, invalid input data
+        '500':
+          description: Internal server error, image processing failed

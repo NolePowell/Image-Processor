@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Manipulation UI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="form.css">
+</head>
+
+<body>
+    <h1>Image Processor</h1>
+    <div id="operations-container">
+        <div id="image-container">
+            <h2>Select an Image File</h2>
+            <input type="file" id="image-input" accept="image/*">
+            <div id="image-preview-container" style="display: none;">
+                <h3>Preview:</h3>
+                <img id="image-preview" src="#" alt="Preview">
+            </div>
+        </div>
+        <div id="commands-container">
+            <h2>Available Operations:</h2>
+            <button class="operation-button" data-operation="resizeWidth"><i class="fas fa-arrows-alt-h"></i> Resize
+                Width</button>
+            <button class="operation-button" data-operation="resizeHeight"><i class="fas fa-arrows-alt-v"></i> Resize
+                Height</button>
+            <button class="operation-button" data-operation="rotateLeft"><i class="fas fa-undo-alt"></i> Rotate
+                Left</button>
+            <button class="operation-button" data-operation="rotateRight"><i class="fas fa-redo-alt"></i> Rotate
+                Right</button>
+            <button class="operation-button" data-operation="rotateDegrees"><i class="fas fa-sync-alt"></i> Rotate +/- n
+                degrees</button>
+            <button class="operation-button" data-operation="grayscale"><i class="fas fa-adjust"></i> Grayscale</button>
+            <button class="operation-button" data-operation="generateThumbnail"><i class="far fa-image"></i> Generate
+                Thumbnail</button>
+            <button class="operation-button" data-operation="flipHorizontal"><i class="fa-solid fa-grip-lines"></i> Flip
+                Horizontal</button>
+            <button class="operation-button" data-operation="flipVertical"><i
+                    class="fa-solid fa-grip-lines-vertical"></i> Flip Vertical</button>
+        </div>
+        <div id="commands-container">
+            <form id="imageForm">
+                <h2>Commands:</h2>
+                <ul id="commands-list"></ul>
+                <button id="process-button" type="submit">Process Commands</button>
+                <!--hidden input field to store given file name -->
+                <input type="hidden" id="image-data" name="imageData">
+
+            </form>
+        </div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('image-input');
+        const imagePreview = document.getElementById('image-preview');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const operationsContainer = document.getElementById('operations-container');
+        const commandsContainer = document.getElementById('commands-container');
+        const processButton = document.getElementById('process-button');
+        const commandsList = document.getElementById('commands-list');
+        const messageDiv = document.getElementById('message');
+
+        imageInput.addEventListener('change', () => {
+            const file = imageInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    imagePreview.src = reader.result;
+                    imagePreviewContainer.style.display = 'block';
+                    operationsContainer.style.display = 'block';
+                    processButton.style.display = 'block';
+                    // Hidden input field for getting the image data URL (for sending HTTP requests)
+                    document.getElementById('image-data').value = reader.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        const form = document.getElementById('imageForm');
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const commands = Array.from(commandsList.children).map(item => item.textContent);
+            const imageFileName = document.getElementById('image-data').value; // This will contain the Base64 image data URL
+
+            // Extract the Base64 data from the data URL
+            const imageData = imageFileName.split(',')[1]; // Comma added to seperate image data type and Base64 data
+
+            try {
+                const response = await fetch('/processImage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ commands, imageData })
+                });
+                const data = await response.json();
+                messageDiv.textContent = data.message;
+            } catch (error) {
+                console.error('Error processing image:', error);
+                messageDiv.textContent = 'Error processing image.';
+            }
+        });
+
+
+        // Add event listeners to each operation button
+        const operationButtons = document.querySelectorAll('.operation-button');
+
+        operationButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const operation = button.getAttribute('data-operation');
+                let params = null;
+
+                // Prompt user for parameters if necessary
+                if (operation === 'resizeWidth' || operation === 'resizeHeight' ||
+                    operation === 'rotateLeft' || operation === 'rotateRight' || operation === 'rotateDegrees') {
+                    params = prompt(`Enter parameters for ${operation}:`);
+                }
+
+                const listItem = document.createElement('li');
+                listItem.textContent = `${operation} ${params || ''}`;
+                commandsList.appendChild(listItem);
+                commandsContainer.style.display = 'block';
+
+                // Add delete button to remove command
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => {
+                    listItem.remove();
+                    // Hide commands container if list is empty
+                    if (commandsList.children.length === 0) {
+                        commandsContainer.style.display = 'none';
+                    }
+                });
+                listItem.appendChild(deleteButton);
+            });
+        });
+    </script>
+</body>
+
+</html>

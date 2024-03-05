@@ -1,0 +1,44 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#operations-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%; /* Ensure full width */
+    margin-bottom: 20px;
+}
+
+#image-container {
+    width: 45%; /* Adjust width as needed */
+}
+
+#commands-container {
+    width: 45%; /* Adjust width as needed */
+}
+
+#image-preview {
+    max-width: 100%;
+    max-height: 500px;
+}
+
+.operation-button, .command-item {
+    margin-bottom: 5px;
+}
+
+.delete-button {
+    display: none;
+}
+
+.command-item:hover .delete-button {
+    display: inline-block;
+}
+
+#process-button {
+    display: none;
+}
